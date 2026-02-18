@@ -104,13 +104,20 @@ const getHistory = async (req, res) => {
 // @access  Private
 const generateCertificate = async (req, res) => {
     try {
-        const { plantationId, name } = req.body;
+        const { plantationId, name, location } = req.body;
         const selfieImage = req.file ? req.file.filename : null;
 
         const plantation = await Plantation.findOne({ _id: plantationId, userId: req.user._id });
 
         if (!plantation) {
             return res.status(404).json({ message: 'Plantation not found' });
+        }
+
+        // Update location if provided (override or fill missing)
+        if (location) {
+            // If location.address exists, update it, or set if it was null
+            if (!plantation.location) plantation.location = {};
+            plantation.location.address = location;
         }
 
         plantation.images.selfie = selfieImage;
