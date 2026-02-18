@@ -12,7 +12,7 @@ const generateToken = (id) => {
 // @route   POST /api/auth/send-otp
 // @access  Public
 const sendOtp = async (req, res) => {
-    const { mobileNumber } = req.body;
+    const { mobileNumber, isLogin } = req.body;
 
     if (!mobileNumber) {
         return res.status(400).json({ message: 'Mobile number is required' });
@@ -26,21 +26,24 @@ const sendOtp = async (req, res) => {
         // Check if user exists
         let user = await User.findOne({ mobileNumber });
 
-        if (!user) {
-            // If user doesn't exist, we validly can't save OTP to a non-existent user record for login
-            // But for signup, we verify OTP before creating user.
-            // Strategy: We can either create a temporary record or just return OTP (Mock).
-            // For this flow: We will check coverage.
-            // If it's a new user, we can't save OTP to DB unless we create a temp user or handle it in signup.
-            // Simplified approach: Create user with empty name if not exists, or just send OK.
-            // BETTER: We will upsert the user or handle it in a sophisticated way?
-            // Let's just create the user shell if not exists, or update if exists.
-
-            // Actually for "Signup", the user passes name. 
-            // If we strictly follow "Send OTP -> Signup/Login", 
-            // we should probably store OTP in a separate collection or allow creating user without name initially?
-            // Let's go with: "Login" flow creates/updates user.
+        // If trying to login but user not found
+        if (!user && isLogin) {
+            return res.status(404).json({ message: 'User not found. Please register first.' });
         }
+
+        // If user doesn't exist, we validly can't save OTP to a non-existent user record for login
+        // But for signup, we verify OTP before creating user.
+        // Strategy: We can either create a temporary record or just return OTP (Mock).
+        // For this flow: We will check coverage.
+        // If it's a new user, we can't save OTP to DB unless we create a temp user or handle it in signup.
+        // Simplified approach: Create user with empty name if not exists, or just send OK.
+        // BETTER: We will upsert the user or handle it in a sophisticated way?
+        // Let's just create the user shell if not exists, or update if exists.
+
+        // Actually for "Signup", the user passes name. 
+        // If we strictly follow "Send OTP -> Signup/Login", 
+        // we should probably store OTP in a separate collection or allow creating user without name initially?
+        // Let's go with: "Login" flow creates/updates user.
 
         // For simplicity: We will create/update the user with just mobile number and OTP.
         // If name is missing, it's fine for now, will be updated in signup.
@@ -50,6 +53,7 @@ const sendOtp = async (req, res) => {
             user.otpExpires = otpExpires;
             await user.save();
         } else {
+            // Only create new user if NOT in login mode (i.e. signup)
             user = await User.create({
                 name: 'New User', // Placeholder
                 mobileNumber,
@@ -125,6 +129,10 @@ const login = async (req, res) => {
     try {
         const user = await User.findOne({ mobileNumber });
 
+        if (!user) {
+            return res.status(404).json({ message: 'User not found. Please register first.' });
+        }
+
         if (user && (user.otp === otp && user.otpExpires > Date.now())) {
 
             // Clear OTP
@@ -156,6 +164,10 @@ const loginWithPassword = async (req, res) => {
 
     try {
         const user = await User.findOne({ mobileNumber }).select('+password');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found. Please register first.' });
+        }
 
         if (user && user.password && (await bcrypt.compare(password, user.password))) {
             res.json({
