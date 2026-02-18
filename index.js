@@ -9,7 +9,15 @@ const connectDB = require('./src/config/db');
 dotenv.config();
 
 // Connect to database
+// Connect to database
 connectDB();
+
+// Seeders
+const seedLandOwnership = require('./src/utils/seedLandOwnership');
+// Run seeder after DB connection is established (or ideally use a delayed check, but here we can call it)
+// Note: connectDB is async but doesn't return promise in some templates, but usually mongoose operations buffer.
+// Better to call it.
+seedLandOwnership();
 
 const app = express();
 
@@ -31,6 +39,7 @@ app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/events', require('./src/routes/eventRoutes'));
 app.use('/api', require('./src/routes/plantationRoutes'));
 app.use('/api/location', require('./src/routes/locationRoutes'));
+app.use('/api/options', require('./src/routes/optionRoutes'));
 
 app.use(errorHandler); // Register error handler last
 // app.use('/api/certificate', require('./src/routes/certificateRoutes')); // Integrated into plantationRoutes
