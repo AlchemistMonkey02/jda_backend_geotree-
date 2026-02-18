@@ -8,7 +8,7 @@ const EMAIL = 'signup.test@example.com';
 
 async function testSignup() {
     try {
-        console.log('--- Testing Signup Flow ---');
+        console.log('--- Testing Signup ---');
 
         // 1. Send OTP
         console.log('1. Sending OTP...');
