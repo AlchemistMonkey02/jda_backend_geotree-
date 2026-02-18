@@ -15,7 +15,7 @@ const getAddressDetails = async (req, res) => {
 
         const config = {
             method: 'get',
-            url: `https://gpspl.geoplanetsolution.in/pincode/?lat=${lat}&lon=${lon}&boundary=true`,
+            url: `https://gpspl.geoplanetsolution.in/pincode/?lat=${lat}&long=${lon}&boundary=true`,
             headers: {
                 'X-Auth-Key': apiKey
             }
