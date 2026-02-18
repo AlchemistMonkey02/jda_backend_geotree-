@@ -30,6 +30,7 @@ const { errorHandler } = require('./src/middleware/errorMiddleware');
 app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/events', require('./src/routes/eventRoutes'));
 app.use('/api', require('./src/routes/plantationRoutes'));
+app.use('/api/location', require('./src/routes/locationRoutes'));
 
 app.use(errorHandler); // Register error handler last
 // app.use('/api/certificate', require('./src/routes/certificateRoutes')); // Integrated into plantationRoutes
