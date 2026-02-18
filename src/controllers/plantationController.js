@@ -81,9 +81,11 @@ const getHistory = async (req, res) => {
             plantName: p.plantName,
             category: p.category,
             height: p.height,
+            areaType: p.areaType,
+            status: p.status,
             location: p.location.address || `Lat: ${p.location.lat?.toFixed(4)}, Lng: ${p.location.lng?.toFixed(4)}`, // Fallback
             landOwnership: p.landOwnership,
-            remark: p.status === 'verified' ? 'Verified Plantation' : 'Pending Verification',
+            remark: p.status === 'verified' ? 'Verified Plantation' : (p.status === 'pending' ? 'Pending Verification' : 'Rejected'),
             images: {
                 site: getImageUrl(req, p.images.site),
                 plantation: getImageUrl(req, p.images.plantation),
@@ -163,7 +165,8 @@ const getCertificates = async (req, res) => {
             location: p.location.address || 'Unknown Location',
             date: new Date(p.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             image: getImageUrl(req, p.images.plantation) || getImageUrl(req, p.images.site), // Use plantation image for cert preview
-            selfie: getImageUrl(req, p.images.selfie)
+            selfie: getImageUrl(req, p.images.selfie),
+            name: p.certificateDetails?.name || req.user.name // Include name from certificate details
         }));
 
         res.json(certificates);
