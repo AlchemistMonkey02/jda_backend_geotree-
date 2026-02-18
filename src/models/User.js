@@ -14,6 +14,10 @@ const userSchema = mongoose.Schema({
         type: String,
         default: ''
     },
+    password: {
+        type: String,
+        select: false // Don't return password by default
+    },
     role: {
         type: String,
         default: 'Member' // Member, Admin, etc.

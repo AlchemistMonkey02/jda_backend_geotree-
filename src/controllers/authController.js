@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -68,7 +69,7 @@ const sendOtp = async (req, res) => {
 // @route   POST /api/auth/signup
 // @access  Public
 const signup = async (req, res) => {
-    const { name, mobileNumber, otp, email } = req.body;
+    const { name, mobileNumber, otp, email, password } = req.body;
 
     try {
         const user = await User.findOne({ mobileNumber });
@@ -85,9 +86,18 @@ const signup = async (req, res) => {
             return res.status(400).json({ message: 'OTP expired' });
         }
 
+        if (!password) {
+            return res.status(400).json({ message: 'Password is required' });
+        }
+
         // Update user details
         user.name = name;
         user.email = email || ''; // Update email if provided
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+
         user.otp = undefined;
         user.otpExpires = undefined;
         await user.save();
@@ -132,6 +142,32 @@ const login = async (req, res) => {
             });
         } else {
             res.status(401).json({ message: 'Invalid OTP or Mobile Number' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Auth user & get token via Password
+// @route   POST /api/auth/login-password
+// @access  Public
+const loginWithPassword = async (req, res) => {
+    const { mobileNumber, password } = req.body;
+
+    try {
+        const user = await User.findOne({ mobileNumber }).select('+password');
+
+        if (user && user.password && (await bcrypt.compare(password, user.password))) {
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                mobileNumber: user.mobileNumber,
+                role: user.role,
+                token: generateToken(user._id)
+            });
+        } else {
+            res.status(401).json({ message: 'Invalid mobile number or password' });
         }
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -221,6 +257,7 @@ module.exports = {
     sendOtp,
     signup,
     login,
+    loginWithPassword,
     getProfile,
     updateProfile,
     deleteAccount
