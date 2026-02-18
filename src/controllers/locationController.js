@@ -15,13 +15,14 @@ const getAddressDetails = async (req, res) => {
 
         const config = {
             method: 'get',
-            url: `https://gpspl.geoplanetsolution.in/pincode/?lat=${lat}&long=${lon}&boundary=true`,
+            url: `https://gpspl.geoplanetsolution.in/pincode/?lat=${lat}&lon=${lon}&boundary=true`,
             headers: {
                 'X-Auth-Key': apiKey
             }
         };
 
         const response = await axios(config);
+        console.log("Location API Response:", response.data);
 
         // The external API returns text/html sometimes or JSON. User code did response.text().
         // Usually axios parses JSON automatically. If it returns text, axios data will be text.
