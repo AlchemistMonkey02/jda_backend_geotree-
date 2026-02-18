@@ -5,7 +5,8 @@ const {
     getHistory,
     generateCertificate,
     getCertificates,
-    getStats
+    getStats,
+    getPlantList
 } = require('../controllers/plantationController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -24,5 +25,8 @@ router.get('/certificate/my-certificates', protect, getCertificates);
 
 // Dashboard Routes
 router.get('/dashboard/stats', getStats);
+
+// Plant List Route
+router.get('/plants', getPlantList);
 
 module.exports = router;

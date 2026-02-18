@@ -187,10 +187,58 @@ const getStats = async (req, res) => {
     }
 };
 
+// @desc    Get List of Plants from DB (Paginated)
+// @route   GET /api/plants
+// @access  Public
+const getPlantList = async (req, res) => {
+    const Plant = require('../models/Plant');
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+
+        const query = {};
+        if (search) {
+            query.$or = [
+                { englishName: { $regex: search, $options: 'i' } },
+                { scientificName: { $regex: search, $options: 'i' } },
+                { hindiName: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const total = await Plant.countDocuments(query);
+        const plants = await Plant.find(query)
+            .sort({ englishName: 1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        const formattedPlants = plants.map(p => ({
+            id: p.plantId,
+            scientificName: p.scientificName,
+            englishName: p.englishName,
+            hindiName: p.hindiName,
+            category: p.category
+        }));
+
+        res.json({
+            plants: formattedPlants,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalPlants: total,
+            hasMore: page * limit < total
+        });
+
+    } catch (error) {
+        console.error('Error fetching plant list:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     createPlantation,
     getHistory,
     generateCertificate,
     getCertificates,
-    getStats
+    getStats,
+    getPlantList
 };
